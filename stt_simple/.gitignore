@@ -1,0 +1,5 @@
+.venv/
+project/.venv/
+__pycache__/
+project/__pycache__/
+project/app/__pycache__/
