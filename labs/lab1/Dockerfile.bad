@@ -1,0 +1,17 @@
+# тяжёлый базовый образ
+FROM python:3.12
+
+# обновление apt и установка пакетов в одной строке без очистки кэша
+RUN apt-get update && apt-get install -y ffmpeg
+
+# копируем весь проект (включая мусор, .git, виртуальные окружения)
+COPY . /app
+
+WORKDIR /app
+
+# установка зависимостей без фиксированных версий
+RUN pip install fastapi uvicorn[standard] faster-whisper python-multipart
+
+VOLUME /app/data
+
+CMD ["uvicorn", "stt_simple.project.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
