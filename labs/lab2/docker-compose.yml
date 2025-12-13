@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  init_redis:
+    image: busybox
+    container_name: init_redis
+    command: ["sh", "-c", "echo 'Waiting for redis...' && sleep 3"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sttnet
+
+  redis:
+    image: redis:7
+    container_name: stt_redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+    volumes:
+      - redis_data:/data
+    networks:
+      - sttnet
+
+  stt_app:
+    build:
+      context: ../../
+      dockerfile: labs/lab1/Dockerfile.good
+    container_name: stt_app
+    depends_on:
+      redis:
+        condition: service_healthy
+      init_redis:
+        condition: service_completed_successfully
+    ports:
+      - "${APP_PORT}:8000"
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+    command: ["uvicorn", "stt_simple.project.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    networks:
+      - sttnet
+
+volumes:
+  redis_data:
+
+networks:
+  sttnet:

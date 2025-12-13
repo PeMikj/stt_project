@@ -2,6 +2,15 @@ from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 
 from stt_simple.project.app.stt import transcribe_buffer
+import os
+import redis
+
+redis_client = redis.Redis(
+    host=os.getenv("REDIS_HOST", "redis"),
+    port=6379,
+    decode_responses=True
+)
+
 
 app = FastAPI()
 
@@ -187,6 +196,17 @@ async def websocket_endpoint(ws: WebSocket):
 
         if buffer_size > 65536:
             text, duration = transcribe_buffer(audio_chunks)
+            if text:
+                redis_client.lpush("history", text)
+                redis_client.ltrim("history", 0, 19)
             await ws.send_json({"text": text, "duration": duration})
             audio_chunks.clear()
             buffer_size = 0
+
+
+@app.get("/history")
+async def get_history():
+    """
+    returns last 20 texts
+    """
+    return {"history": redis_client.lrange("history", 0, 19)}
