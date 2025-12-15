@@ -1,43 +1,38 @@
-Порядок имеет значение, потому что Deployment использует ConfigMap и Secret.
+## Важность порядка применения ресурсов
 
-Если применить Deployment раньше — pod не будет создан.
+Порядок имеет значение, потому что `Deployment` использует `ConfigMap` и `Secret`.
 
-Корректный порядок:
-1. ConfigMap и Secret
-2. Service
-3. Deployment
+Если применить `Deployment` раньше — pod не будет создан.
 
+### Корректный порядок применения:
+1. `ConfigMap` и `Secret`
+2. `Service`
+3. `Deployment`
 
-Для локального доступа к сервису используется Service типа NodePort.
+---
 
-Туннелирование трафика:
-minikube service nextcloud-service
+## Локальный доступ к сервису
 
+Для локального доступа к сервису используется `Service` типа `NodePort`.
 
-При scale = 0:
-- Pod PostgreSQL уничтожается
-- Nextcloud теряет соединение с БД
-- UI становится недоступен
+Туннелирование трафика выполняется командой:## Важность порядка применения ресурсов
 
-При scale = 1:
-- PostgreSQL стартует заново
-- Данные сохраняются, так как используется PVC
-- Nextcloud снова начинает работать
+Порядок имеет значение, потому что `Deployment` использует `ConfigMap` и `Secret`.
 
+Если применить `Deployment` раньше — pod не будет создан.
 
-В ходе работы:
-- POSTGRES_USER и POSTGRES_PASSWORD вынесены в Secret
-- Конфигурация Nextcloud вынесена в ConfigMap
+### Корректный порядок применения:
+1. `ConfigMap` и `Secret`
+2. `Service`
+3. `Deployment`
 
+---
 
-Для проверки состояния Nextcloud используются liveness и readiness probes.
+## Локальный доступ к сервису
 
-В качестве health-endpoint применяется путь:
-/status.php
+Для локального доступа к сервису используется `Service` типа `NodePort`.
 
-
-Проверка состояния сервиса:
-
+Туннелирование трафика выполняется командой:
 kubectl exec -it deployment/nextcloud -- curl http://localhost/status.php
 
 

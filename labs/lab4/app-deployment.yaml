@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stt-app
+  labels:
+    app: stt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stt
+  template:
+    metadata:
+      labels:
+        app: stt
+    spec:
+      initContainers:
+        - name: wait-for-redis
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z redis 6379; do
+                echo "waiting for redis";
+                sleep 2;
+              done
+
+      containers:
+        - name: stt-app
+          image: localhost:5000/stt-app:latest
+          imagePullPolicy: Always
+
+          command:
+            - uvicorn
+            - stt_simple.project.app.main:app
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8000"
+
+          ports:
+            - containerPort: 8000
+
+          envFrom:
+            - configMapRef:
+                name: stt-config
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 10
+
